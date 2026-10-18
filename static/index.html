@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#173d31" />
+    <title>Financiero · Tus cuentas, claras</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23173d31'/%3E%3Cpath d='M12 28V12h16v4H17v3h9v4h-9v5' fill='%23d9efa5'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Ir al contenido</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Financiero, inicio">
+          <span class="brand-mark" aria-hidden="true">
+            f
+            <span>.</span>
+          </span>
+          financiero
+          <span class="brand-dot">.</span>
+        </a>
+        <div class="header-right">
+          <span class="local-status">
+            <span></span>
+            En tu dispositivo
+          </span>
+          <span class="header-divider"></span>
+          <label class="currency-label">
+            <span class="sr-only">
+              Moneda de visualización; no convierte los importes
+            </span>
+            <select
+              id="currency-select"
+              title="Moneda de visualización. No convierte los importes."
+            >
+              <option value="EUR">EUR €</option>
+              <option value="USD">USD $</option>
+              <option value="MXN">MXN $</option>
+              <option value="COP">COP $</option>
+              <option value="ARS">ARS $</option>
+              <option value="CLP">CLP $</option>
+              <option value="PEN">PEN S/</option>
+              <option value="GBP">GBP £</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="page">
+      <div id="connection-error" class="error-banner" role="alert" hidden>
+        <span id="connection-error-text"></span>
+        <button type="button" id="retry-button">Reintentar</button>
+      </div>
+      <section class="page-heading" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">
+            <span></span>
+            TU ESPACIO FINANCIERO
+          </p>
+          <h1 id="page-title">Tus cuentas, claras.</h1>
+          <p class="subtitle">
+            Un poco de orden. Más tranquilidad para tu día a día.
+          </p>
+        </div>
+        <button class="button button-primary add-button" type="button" data-add>
+          <span aria-hidden="true">＋</span>
+          Nuevo movimiento
+        </button>
+      </section>
+      <section class="period-bar" aria-label="Periodo del resumen">
+        <div class="month-control">
+          <button
+            type="button"
+            id="previous-month"
+            class="icon-button"
+            aria-label="Mes anterior"
+          >
+            ‹
+          </button>
+          <label>
+            <span class="sr-only">Mes del resumen</span>
+            <input
+              id="month-picker"
+              type="month"
+              required
+              min="1900-01"
+              max="9999-12"
+            />
+          </label>
+          <button
+            type="button"
+            id="next-month"
+            class="icon-button"
+            aria-label="Mes siguiente"
+          >
+            ›
+          </button>
+        </div>
+        <div class="total-label">
+          Saldo de todo el historial
+          <strong id="total-balance">—</strong>
+        </div>
+      </section>
+      <section
+        class="summary-grid"
+        aria-label="Resumen del mes"
+        aria-live="polite"
+      >
+        <article class="summary-card balance-card">
+          <div class="card-label">
+            <span>Balance del mes</span>
+            <span class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 18 18 6M8 6h10v10" />
+              </svg>
+            </span>
+          </div>
+          <p class="metric" id="summary-balance">—</p>
+          <div class="metric-caption">
+            <span class="balance-dot"></span>
+            <span id="balance-caption">Ingresos menos gastos</span>
+          </div>
+          <div class="card-decoration" aria-hidden="true"></div>
+        </article>
+        <article class="summary-card">
+          <div class="card-label">
+            <span>Ingresos</span>
+            <span class="metric-icon income-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 6 6 18M6 8v10h10" />
+              </svg>
+            </span>
+          </div>
+          <p class="metric" id="summary-income">—</p>
+          <p class="metric-caption">Todo lo que entra este mes</p>
+        </article>
+        <article class="summary-card">
+          <div class="card-label">
+            <span>Gastos</span>
+            <span class="metric-icon expense-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 18 18 6M8 6h10v10" />
+              </svg>
+            </span>
+          </div>
+          <p class="metric" id="summary-expense">—</p>
+          <p class="metric-caption">Todo lo que sale este mes</p>
+        </article>
+      </section>
+      <div class="content-grid">
+        <section
+          class="panel movements-panel"
+          aria-labelledby="movements-title"
+        >
+          <div class="panel-heading">
+            <div>
+              <h2 id="movements-title">Movimientos</h2>
+              <p id="movements-subtitle">Tu actividad, en un solo lugar.</p>
+            </div>
+            <a
+              class="button button-outline export-button"
+              id="export-month"
+              href="/api/export.csv"
+              download
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5" />
+              </svg>
+              <span>Exportar CSV</span>
+            </a>
+          </div>
+          <div class="movement-controls">
+            <div
+              class="type-filters"
+              role="group"
+              aria-label="Filtrar por tipo"
+            >
+              <button
+                type="button"
+                class="active"
+                data-filter="all"
+                aria-pressed="true"
+              >
+                Todos
+              </button>
+              <button type="button" data-filter="expense" aria-pressed="false">
+                Gastos
+              </button>
+              <button type="button" data-filter="income" aria-pressed="false">
+                Ingresos
+              </button>
+            </div>
+            <span class="result-count" id="transactions-count">
+              0 movimientos
+            </span>
+          </div>
+          <div class="search-controls">
+            <label class="search-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 4 4" />
+              </svg>
+              <span class="sr-only">Buscar movimientos</span>
+              <input
+                type="search"
+                id="transaction-search"
+                placeholder="Buscar un movimiento…"
+                autocomplete="off"
+              />
+            </label>
+            <label class="category-filter">
+              <span class="sr-only">Filtrar por categoría</span>
+              <select id="category-filter">
+                <option value="all">Todas las categorías</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap" id="transactions-table-wrap" hidden>
+            <table>
+              <caption class="sr-only">
+                Movimientos del mes seleccionado
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Concepto</th>
+                  <th scope="col" class="category-column">Categoría</th>
+                  <th scope="col" class="date-column">Fecha</th>
+                  <th scope="col" class="amount-column">Importe</th>
+                  <th scope="col"><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody id="transactions-body"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="empty-state">
+            <div class="empty-illustration" aria-hidden="true">
+              <div class="empty-paper">
+                <i></i>
+                <i></i>
+                <i></i>
+              </div>
+              <span>＋</span>
+            </div>
+            <h3 id="empty-title">Aquí empieza tu tranquilidad</h3>
+            <p id="empty-description">
+              Añade tu primer ingreso o gasto y empieza
+              <br class="desktop-break" />
+              a ver tus finanzas con claridad.
+            </p>
+            <button
+              type="button"
+              class="button button-outline"
+              id="empty-add"
+              data-add
+            >
+              ＋ Añadir un movimiento
+            </button>
+            <button type="button" class="text-button" id="clear-filters" hidden>
+              Limpiar filtros
+            </button>
+          </div>
+          <div class="table-footer">
+            <span>
+              <span class="saved-dot"></span>
+              Guardado automáticamente en este equipo
+            </span>
+            <span id="footer-month"></span>
+          </div>
+        </section>
+        <aside class="side-column">
+          <section
+            class="panel spending-panel"
+            aria-labelledby="spending-title"
+          >
+            <div class="panel-heading">
+              <div>
+                <h2 id="spending-title">¿En qué se va?</h2>
+                <p>Tus gastos por categoría.</p>
+              </div>
+              <span class="panel-symbol" aria-hidden="true">◔</span>
+            </div>
+            <div class="chart-container">
+              <svg id="expense-chart" viewBox="0 0 160 160" aria-hidden="true">
+                <circle class="chart-track" cx="80" cy="80" r="63" />
+                <g id="chart-segments" transform="rotate(-90 80 80)"></g>
+              </svg>
+              <div class="chart-center">
+                <span id="chart-value">—</span>
+                <small>en gastos</small>
+              </div>
+            </div>
+            <ul
+              class="category-breakdown"
+              id="category-breakdown"
+              aria-label="Gastos por categoría"
+            ></ul>
+            <p id="chart-empty" class="chart-empty">
+              Cuando registres un gasto, verás aquí
+              <br />
+              cómo se distribuye tu dinero.
+            </p>
+          </section>
+          <section class="privacy-card">
+            <span class="privacy-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3 4 6v6c0 4 5 8 8 9 3-1 8-5 8-9V6Z" />
+                <path d="m8.5 12 2.5 2.5 4.5-5" />
+              </svg>
+            </span>
+            <h2>Tus datos se quedan contigo.</h2>
+            <p>
+              Sin cuentas, sin conexiones bancarias. Tu información se guarda en
+              este equipo, bajo tu control.
+            </p>
+            <a href="/api/export.csv" download class="text-link">
+              Descargar todo mi historial
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 18 18 6M8 6h10v10" />
+                </svg>
+              </span>
+            </a>
+          </section>
+        </aside>
+      </div>
+      <footer class="page-footer">
+        <span>
+          financiero
+          <span>.</span>
+          <span class="footer-tagline">Hecho para ir a tu ritmo.</span>
+        </span>
+        <span>Local. Sencillo. Tuyo.</span>
+      </footer>
+    </main>
+    <dialog id="transaction-dialog" class="modal">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">UN PASO MÁS HACIA EL ORDEN</p>
+          <h2 id="transaction-title">Nuevo movimiento</h2>
+        </div>
+        <button
+          type="button"
+          class="icon-button close-dialog"
+          aria-label="Cerrar formulario"
+        >
+          ×
+        </button>
+      </div>
+      <form id="transaction-form">
+        <div
+          class="transaction-type"
+          role="group"
+          aria-label="Tipo de movimiento"
+        >
+          <button
+            type="button"
+            data-type="expense"
+            class="active"
+            aria-pressed="true"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 18 18 6M8 6h10v10" />
+            </svg>
+            Gasto
+          </button>
+          <button type="button" data-type="income" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6 6 18M6 8v10h10" />
+            </svg>
+            Ingreso
+          </button>
+        </div>
+        <label class="form-label" for="description">Concepto</label>
+        <input
+          class="form-input"
+          id="description"
+          name="description"
+          placeholder="Por ejemplo, compra del supermercado"
+          maxlength="200"
+          required
+          autocomplete="off"
+        />
+        <div class="form-row">
+          <div>
+            <label class="form-label" for="amount">Importe</label>
+            <div class="amount-field">
+              <input
+                class="form-input"
+                id="amount"
+                name="amount"
+                inputmode="decimal"
+                type="text"
+                placeholder="0,00"
+                required
+                autocomplete="off"
+                maxlength="15"
+              />
+              <span id="amount-currency">EUR</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="date">Fecha</label>
+            <input
+              class="form-input"
+              id="date"
+              name="date"
+              type="date"
+              min="1900-01-01"
+              max="9999-12-31"
+              required
+            />
+          </div>
+        </div>
+        <label class="form-label" for="category">Categoría</label>
+        <select
+          class="form-input"
+          id="category"
+          name="category"
+          required
+        ></select>
+        <p id="transaction-error" class="form-error" role="alert" hidden></p>
+        <p class="form-hint">Se guardará solo en este equipo.</p>
+        <div class="modal-actions">
+          <button type="button" class="button button-outline close-dialog">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            id="save-transaction"
+            class="button button-primary"
+          >
+            Guardar movimiento
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="delete-dialog" class="modal delete-modal">
+      <div class="modal-heading">
+        <h2>¿Eliminar este movimiento?</h2>
+        <button
+          type="button"
+          class="icon-button"
+          id="close-delete"
+          aria-label="Cancelar eliminación"
+        >
+          ×
+        </button>
+      </div>
+      <p id="delete-description"></p>
+      <p class="form-hint">
+        Se eliminará de este equipo. Esta acción no se puede deshacer.
+      </p>
+      <p id="delete-error" class="form-error" role="alert" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="button button-outline" id="cancel-delete">
+          Conservar
+        </button>
+        <button type="button" class="button button-danger" id="confirm-delete">
+          Eliminar movimiento
+        </button>
+      </div>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <noscript>
+      <div class="noscript">
+        Activa JavaScript en tu navegador para usar Financiero.
+      </div>
+    </noscript>
+  </body>
+</html>
